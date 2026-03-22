@@ -1,0 +1,33 @@
+# Nginx + KiwiIRC + Gamja
+# Contexto de build esperado: repo chat/ (ex: ../../chat ou ../chat)
+# O COPY usa caminhos relativos ao root do repo chat/
+
+# Stage 1: Build do Gamja (fonte em ansible/usr/share/gamja/)
+FROM node:22-alpine AS gamja-builder
+
+WORKDIR /gamja
+COPY ansible/usr/share/gamja/package*.json ./
+RUN npm ci
+
+COPY ansible/usr/share/gamja/ ./
+# config.json será sobrescrito por volume em runtime (gamja.config.json)
+RUN npm run build
+
+# Stage 2: Nginx + KiwiIRC + Gamja
+FROM nginx:alpine
+
+RUN apk add --no-cache curl unzip
+
+# KiwiIRC v1.7.1 (mesma versão do playbook Ansible)
+RUN curl -fsSL \
+    "https://github.com/kiwiirc/kiwiirc/releases/download/v1.7.1/kiwiirc-client_v1.7.1-2_any.zip" \
+    -o /tmp/kiwiirc.zip \
+    && mkdir -p /usr/share/kiwiirc \
+    && unzip /tmp/kiwiirc.zip -d /usr/share/kiwiirc/ \
+    && rm /tmp/kiwiirc.zip \
+    && apk del unzip curl
+
+COPY --from=gamja-builder /gamja/dist /usr/share/gamja/dist
+
+# nginx.conf, kiwiirc.client.json e gamja.config.json montados via volume
+EXPOSE 80 8080

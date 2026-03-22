@@ -1,0 +1,38 @@
+# Variáveis globais do projeto
+---
+# Domínios
+domains:
+  irc: "irc.somdomato.com"
+  gamja: "gamja.somdomato.com"
+  chat: "chat.somdomato.com"
+
+# Email para Let's Encrypt
+letsencrypt_email: "sistematico@gmail.com"
+
+# Diretórios das aplicações
+app_dirs:
+  ergo: "/usr/share/ergo"
+  kiwiirc: "/usr/share/kiwiirc"
+  gamja: "/usr/share/gamja"
+  webircgateway: "/opt/webircgateway"
+
+# Diretório de backups
+backup_dir: "/var/backups/sdm-chat"
+
+# Usuários e grupos
+ergo_user: "ergo"
+ergo_group: "ergo"
+nginx_user: "nginx"
+nginx_group: "nginx"
+
+# Configurações SSH
+ansible_port: 2200
+ansible_user: root
+ansible_python_interpreter: "/usr/bin/python3"
+
+# Configurações do sistema
+refresh_apps: true
+
+# Certificados SSL
+ssl_cert_dir: "/etc/letsencrypt/live"
+ssl_renewal_hooks_dir: "/etc/letsencrypt/renewal-hooks/deploy"

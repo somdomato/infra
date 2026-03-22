@@ -1,0 +1,17 @@
+{
+    "windowTitle": "Rádio Som do Mato",
+    "startupScreen": "welcome",
+    "hide_advanced": true,
+    "warnOnExit": false,
+    "kiwiServer": "/webirc",
+    "restricted": true,
+    "theme": "SDM-Dark",
+    "themes": [
+        { "name": "SDM", "url": "static/themes/sdm" },
+        { "name": "SDM-Dark", "url": "static/themes/sdm-dark" }
+    ],
+    "startupOptions": {
+        "channel": "#somdomato",
+        "nick": "{sdm_?}"
+    }
+}

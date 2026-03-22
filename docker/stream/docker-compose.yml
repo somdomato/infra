@@ -1,0 +1,65 @@
+# VPS1 stream – teste standalone (icecast + liquidsoap)
+# Para simular VPS1 completa (site + stream), use o compose raiz:
+#   cd infra && make vps1
+#
+# Uso standalone:
+#   cd infra
+#   make stream
+#   # ou diretamente:
+#   docker compose -f docker/stream/docker-compose.yml up -d --build
+#
+# Portas:
+#   8000 → Icecast (stream HTTP)
+#   8010 → Liquidsoap Harbor (broadcast ao vivo)
+#
+# Sem Next.js, o Liquidsoap não consegue buscar músicas via API.
+# Use make vps1 para o ambiente completo.
+
+services:
+  icecast:
+    container_name: stream-icecast
+    image: moul/icecast
+    ports:
+      - "8000:8000"
+    environment:
+      - ICECAST_SOURCE_PASSWORD=hackme
+      - ICECAST_ADMIN_PASSWORD=hackmeagain
+      - ICECAST_PASSWORD=hackme
+      - ICECAST_RELAY_PASSWORD=hackme
+      - ICECAST_HOSTNAME=localhost
+    volumes:
+      - type: bind
+        source: ./icecast.docker.xml
+        target: /etc/icecast2/icecast.xml
+        read_only: true
+    networks:
+      - stream-network
+    restart: unless-stopped
+
+  liquidsoap:
+    container_name: stream-liquidsoap
+    build:
+      context: ../../stream
+      dockerfile: ../infra/docker/stream/Dockerfile.liquidsoap
+    ports:
+      - "8010:8010"
+    volumes:
+      - type: bind
+        source: ./somdomato.docker.liq
+        target: /etc/liquidsoap/sdm/somdomato.liq
+        read_only: true
+      - type: bind
+        source: ${MUSIC_PATH:-/home/lucas/music/sdm}
+        target: /var/music/sdm
+        read_only: true
+    depends_on:
+      icecast:
+        condition: service_started
+    networks:
+      - stream-network
+    restart: unless-stopped
+
+networks:
+  stream-network:
+    name: sdm-stream-network
+    driver: bridge

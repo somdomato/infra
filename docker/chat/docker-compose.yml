@@ -1,0 +1,94 @@
+# VPS2 chat – teste standalone
+# Espelha Oracle Linux 9 arm64, roda em qualquer arquitetura.
+#
+# Uso standalone:
+#   cd infra
+#   make chat
+#   # ou diretamente:
+#   docker compose -f docker/chat/docker-compose.yml up -d --build
+#
+# Portas:
+#   9080 → KiwiIRC  (equivale a chat.somdomato.com)
+#   9081 → Gamja    (equivale a gamja.somdomato.com)
+#   6667 → IRC plaintext
+#
+# Credenciais de teste:
+#   IRC oper: /oper admin hackme
+
+services:
+  ergo:
+    container_name: chat-ergo
+    build:
+      context: ../../chat
+      dockerfile: ../infra/docker/chat/Dockerfile.ergo
+    ports:
+      - "6667:6667"
+    volumes:
+      - ergo-data:/var/lib/ergo
+      - type: bind
+        source: ./ircd.docker.yaml
+        target: /etc/ergo/ircd.yaml
+        read_only: true
+    networks:
+      - chat-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "echo QUIT | nc -q1 localhost 6667 | grep -q 'irc.localhost'"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  webircgateway:
+    container_name: chat-webircgateway
+    build:
+      context: ../../chat
+      dockerfile: ../infra/docker/chat/Dockerfile.webircgateway
+    volumes:
+      - type: bind
+        source: ./webircgateway.docker.conf
+        target: /opt/webircgateway/config.conf
+        read_only: true
+    depends_on:
+      ergo:
+        condition: service_healthy
+    networks:
+      - chat-network
+    restart: unless-stopped
+
+  nginx:
+    container_name: chat-nginx
+    build:
+      context: ../../chat
+      dockerfile: ../infra/docker/chat/Dockerfile.nginx
+    ports:
+      - "9080:80"
+      - "9081:8080"
+    volumes:
+      - type: bind
+        source: ./nginx.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+      - type: bind
+        source: ./kiwiirc.client.json
+        target: /usr/share/kiwiirc/static/config.json
+        read_only: true
+      - type: bind
+        source: ./gamja.config.json
+        target: /usr/share/gamja/dist/config.json
+        read_only: true
+    depends_on:
+      ergo:
+        condition: service_healthy
+    networks:
+      - chat-network
+    restart: unless-stopped
+
+volumes:
+  ergo-data:
+    name: sdm-ergo-data
+
+networks:
+  chat-network:
+    name: sdm-chat-network
+    driver: bridge

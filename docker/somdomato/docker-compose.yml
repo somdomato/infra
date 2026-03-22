@@ -1,0 +1,127 @@
+# VPS1 site – teste standalone (somdomato apenas)
+# Para simular VPS1 completa (site + stream), use o compose raiz:
+#   cd infra && make vps1
+#
+# Uso standalone:
+#   cd infra
+#   make site
+#   # ou diretamente:
+#   docker compose -f docker/somdomato/docker-compose.yml up -d --build
+#
+# Portas:
+#   443  → HTTPS (site)
+#   8080 → HTTP (redireciona para HTTPS)
+#   8000 → Icecast (direto)
+#   8010 → Liquidsoap Harbor (broadcast ao vivo)
+
+services:
+  nextjs:
+    container_name: somdomato-nextjs
+    build:
+      context: ../../somdomato
+      dockerfile: ../infra/docker/somdomato/Dockerfile.nextjs
+    env_file:
+      - ../../../somdomato/.env
+    volumes:
+      - type: bind
+        source: ../../somdomato
+        target: /app
+      - somdomato-node-modules:/app/node_modules
+      - somdomato-nextjs-cache:/app/.next
+      - type: bind
+        source: ${MUSIC_PATH:-/home/lucas/music/sdm}
+        target: /var/music/sdm
+    environment:
+      - NODE_ENV=development
+      - HOSTNAME=0.0.0.0
+      - MUSIC_PATH=/var/music/sdm
+      - UPLOADS_DIR=/var/music/sdm/uploads
+    ports:
+      - "3000:3000"
+    networks:
+      - somdomato-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/songs/last?genre=geral"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  nginx:
+    container_name: somdomato-nginx
+    image: nginx:alpine
+    ports:
+      - "443:443"
+      - "8080:80"
+    volumes:
+      - type: bind
+        source: ./nginx.dev.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+      - type: bind
+        source: ./certs
+        target: /etc/nginx/certs
+        read_only: true
+    depends_on:
+      nextjs:
+        condition: service_healthy
+      icecast:
+        condition: service_started
+    networks:
+      - somdomato-network
+    restart: unless-stopped
+
+  icecast:
+    container_name: somdomato-icecast
+    image: moul/icecast
+    ports:
+      - "8000:8000"
+    environment:
+      - ICECAST_SOURCE_PASSWORD=hackme
+      - ICECAST_ADMIN_PASSWORD=hackmeagain
+      - ICECAST_PASSWORD=hackme
+      - ICECAST_RELAY_PASSWORD=hackme
+      - ICECAST_HOSTNAME=localhost
+    volumes:
+      - type: bind
+        source: ../../somdomato/ansible/etc/icecast/somdomato-docker.xml
+        target: /etc/icecast2/icecast.xml
+        read_only: true
+    networks:
+      - somdomato-network
+    restart: unless-stopped
+
+  liquidsoap:
+    container_name: somdomato-liquidsoap
+    build:
+      context: ../../somdomato
+      dockerfile: ../infra/docker/somdomato/Dockerfile.liquidsoap
+    ports:
+      - "8081:8081"
+    volumes:
+      - type: bind
+        source: ../../somdomato/ansible/etc/liquidsoap/somdomato-docker.liq
+        target: /etc/liquidsoap/somdomato.liq
+        read_only: true
+      - type: bind
+        source: ${MUSIC_PATH:-/home/lucas/music/sdm}
+        target: /var/music/sdm
+        read_only: true
+    depends_on:
+      icecast:
+        condition: service_started
+      nextjs:
+        condition: service_healthy
+    networks:
+      - somdomato-network
+    restart: unless-stopped
+
+volumes:
+  somdomato-node-modules:
+  somdomato-nextjs-cache:
+
+networks:
+  somdomato-network:
+    name: sdm-somdomato-network
+    driver: bridge

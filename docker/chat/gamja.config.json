@@ -1,0 +1,8 @@
+{
+    "server": {
+        "url": "ws://localhost:9081/webirc",
+        "autoconnect": true,
+        "nick": "{sdm_*}",
+        "autojoin": "#somdomato"
+    }
+}

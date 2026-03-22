@@ -1,0 +1,112 @@
+---
+- name: Preparar o ambiente para o Icecast e LiquidSoap
+  hosts: all
+  become: true
+  remote_user: root
+
+  tasks:
+    - name: Garante que o grupo "icecast2" exista
+      ansible.builtin.group:
+        name: icecast2
+        state: present
+
+    - name: Adicionar os usuários nginx, liquidsoap e icecast2
+      ansible.builtin.user:
+        name: "{{ item }}"
+        group: "{{ item }}"
+      with_items:
+        - "nginx"
+        - "icecast2"
+        - "liquidsoap"
+
+    # LetsEncrypt
+    - name: Instalar o Hook do LetsEncrypt
+      ansible.builtin.copy:
+        src: etc/letsencrypt/renewal-hooks/deploy/icecast-certificates-somdomato
+        dest: /etc/letsencrypt/renewal-hooks/deploy/icecast-certificates-somdomato
+        owner: root
+        group: root
+        mode: '0755'
+
+    # Icecast
+    - name: Alterar as configurações do Icecast
+      ansible.builtin.copy:
+        src: etc/icecast2/somdomato.xml
+        dest: /etc/icecast2/somdomato.xml
+        owner: icecast2
+        group: icecast2
+        mode: '0644'
+
+    # LiquidSoap
+    - name: Instalar os executaveis auxiliares do LiquidSoap
+      ansible.builtin.copy:
+        src: "usr/local/bin/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        owner: root
+        group: root
+        mode: '0755'
+      with_items:
+        - "next-song"
+
+    - name: Criar o diretorio de configuracoes do LiquidSoap
+      ansible.builtin.file:
+        path: /etc/liquidsoap/sdm
+        state: directory
+        owner: liquidsoap
+        group: liquidsoap
+        mode: '0755'
+
+    - name: Alterar as configurações do LiquidSoap
+      ansible.builtin.copy:
+        src: "etc/liquidsoap/sdm/{{ item }}"
+        dest: "/etc/liquidsoap/sdm/{{ item }}"
+        owner: liquidsoap
+        group: liquidsoap
+        mode: '0644'
+      with_items:
+        - "somdomato.liq"
+        - "settings.liq"
+        - "outputs.ogg.liq"
+        - "outputs.mp3.liq"
+
+    # Nginx
+    - name: Copiar os arquivos de configuração dos sites do Nginx
+      ansible.builtin.copy:
+        src: "etc/nginx/sites.d/50-radio.somdomato.com.conf"
+        dest: "/etc/nginx/sites.d/50-radio.somdomato.com.conf"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copiar os arquivos de configuração do Nginx
+      ansible.builtin.copy:
+        src: "etc/nginx/conf.d/{{ item }}"
+        dest: "/etc/nginx/conf.d/{{ item }}"
+        owner: root
+        group: root
+        mode: '0644'
+      with_items:
+        - "no-cache.conf"
+
+    # Systemd
+    - name: Alterar as unidades do systemd
+      ansible.builtin.copy:
+        src: "etc/systemd/system/{{ item }}"
+        dest: "/etc/systemd/system/{{ item }}"
+        owner: root
+        group: root
+        mode: "0644"
+      with_items:
+        - "somdomato-icecast2.service"
+        - "somdomato-liquidsoap.service"
+
+    - name: Reiniciar as unidades do systemd
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: restarted
+        enabled: true
+        daemon_reload: true
+      with_items:
+        - "somdomato-icecast2.service"
+        - "somdomato-liquidsoap.service"
+        - "nginx.service"

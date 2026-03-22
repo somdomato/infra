@@ -1,0 +1,17 @@
+# Espelha VPS1: Debian 13 (Trixie)
+FROM debian:trixie-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    liquidsoap \
+    curl \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /var/log/liquidsoap /var/music/sdm /etc/liquidsoap/sdm
+
+# Script de configuração (montado como volume no compose)
+COPY docker/somdomato.docker.liq /etc/liquidsoap/sdm/somdomato.liq
+
+EXPOSE 8010
+
+CMD ["liquidsoap", "/etc/liquidsoap/sdm/somdomato.liq"]

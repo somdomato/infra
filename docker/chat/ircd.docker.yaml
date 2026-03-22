@@ -1,0 +1,177 @@
+# Configuração do Ergo para Docker (desenvolvimento)
+# Diferenças da produção:
+#   - Sem TLS (certificados auto-assinados não necessários em dev)
+#   - WebSocket sem TLS nas portas 8067 e 8097
+#   - Porta 6667 aberta em todas as interfaces
+#   - Banco de dados em /var/lib/ergo/ircd.db
+
+network:
+    name: SDM
+
+server:
+    name: irc.localhost
+
+    listeners:
+        # IRC plaintext – todas as interfaces (em produção só loopback)
+        ":6667": {}
+
+        # WebSocket para KiwiIRC (kiwiirc transport do Ergo)
+        ":8067":
+            websocket: true
+
+        # WebSocket para Gamja (raw WebSocket)
+        ":8097":
+            websocket: true
+
+    casemapping: permissive
+    enforce-utf8: true
+    lookup-hostnames: false
+    forward-confirm-hostnames: false
+    check-ident: false
+    max-sendq: 96k
+
+    ip-cloaking:
+        enabled: true
+        num-bits: 32
+        netname: sdm
+
+    relaymsg:
+        enabled: false
+        available-to-chanops: false
+        prefix: "~"
+
+    compatibility:
+        allow-truncation: false
+
+    output-path: /var/lib/ergo
+
+accounts:
+    authentication-enabled: true
+    multiclient:
+        allowed-by-default: true
+        enabled: true
+        always-on: opt-in
+        auto-away: opt-in
+
+    registration:
+        enabled: true
+        allow-before-connect: true
+        throttle-to-connection: true
+        email-verification:
+            enabled: false
+
+    nick-reservation:
+        enabled: true
+        method: strict
+        allow-custom-enforcement: true
+        additional-nick-limit: 2
+
+    vhosts:
+        enabled: false
+
+    login-throttling:
+        enabled: true
+        duration: 1m
+        max-attempts: 3
+
+    default-user-modes: +i
+
+channels:
+    default-modes: +nt
+    max-channels-per-client: 100
+    operator-only-creation: false
+
+    registration:
+        enabled: true
+
+    list-delay: 0s
+
+    invite-expiration: 24h
+
+oper-classes:
+    "ircop":
+        title: IRC Operator
+        capabilities:
+            - "oper:local_kill"
+            - "oper:local_ban"
+            - "oper:local_unban"
+            - "oper:remote_kill"
+            - "oper:remote_ban"
+            - "oper:remote_unban"
+            - "oper:local_jupe"
+            - "oper:rehash"
+            - "oper:die"
+            - "snomask:x"
+            - "snomask:b"
+            - "roleplay"
+            - "oper:overridechannel"
+            - "accreg"
+            - "sajoin"
+            - "samode"
+            - "vhosts"
+            - "chanreg"
+            - "history:delete"
+            - "defcon"
+
+# Senha: hackme (bcrypt custo 4)
+opers:
+    admin:
+        class: "ircop"
+        whois-line: is the IRC administrator
+        password: "$2a$04$WoMZNlMDmKWTVS5F4S3eDe2zVNRF.2nEAlb0O4X4mfDOUeW0hFsQi"
+        hidden: false
+        auto: false
+
+logging:
+    - method: stdout
+      type: "*"
+      level: info
+
+limits:
+    awaylen: 390
+    chanlistlen: 128
+    channellen: 64
+    kicklen: 390
+    monitorlen: 1000
+    nicklen: 32
+    topiclen: 390
+    userlen: 32
+    whowasEntries: 100
+    multiline:
+        max-bytes: 4096
+        max-lines: 100
+
+history:
+    enabled: true
+    channel-length: 512
+    client-length: 128
+    autoresize-window: 3d
+    autoreplay-on-join: 0
+    chathistory-maxmessages: 100
+    znc-maxmessages: 2048
+    restrictions:
+        expire-time: 7d
+        max-age: 0
+        query-cutoff: ""
+        grace-period: 1h
+    persistent:
+        enabled: false
+        unregistered-channels: false
+        registered-channels: opt-in
+        direct-client-messages: opt-in
+    retention:
+        allow-individual-delete: false
+        enable-account-indexing: false
+
+fakelag:
+    enabled: false
+
+datastore:
+    path: /var/lib/ergo/ircd.db
+    autoupgrade: true
+
+roleplay:
+    enabled: false
+
+extjwt:
+    default: {}

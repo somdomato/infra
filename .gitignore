@@ -1,0 +1,12 @@
+# Certificados SSL gerados localmente
+docker/somdomato/certs/
+
+# Arquivos de ambiente com segredos
+.env
+.env.local
+
+# Senhas de vault do Ansible
+ansible/**/.vault_pass
+
+# macOS
+.DS_Store
