@@ -19,6 +19,7 @@ services:
   icecast:
     container_name: stream-icecast
     image: moul/icecast
+    platform: linux/amd64
     ports:
       - "8000:8000"
     environment:

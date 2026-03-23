@@ -33,7 +33,7 @@ services:
       - chat-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "echo QUIT | nc -q1 localhost 6667 | grep -q 'irc.localhost'"]
+      test: ["CMD-SHELL", "echo QUIT | curl -s --http0.9 telnet://localhost:6667 --max-time 2 | grep -q ERROR"]
       interval: 10s
       timeout: 5s
       retries: 6

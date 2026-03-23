@@ -87,6 +87,7 @@ services:
     profiles: [vps1]
     container_name: sdm-icecast
     image: moul/icecast
+    platform: linux/amd64
     ports:
       - "8000:8000"
     environment:
@@ -151,7 +152,7 @@ services:
       - vps2
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "echo QUIT | nc -q1 localhost 6667 | grep -q 'irc.localhost'"]
+      test: ["CMD-SHELL", "echo QUIT | curl -s --http0.9 telnet://localhost:6667 --max-time 2 | grep -q ERROR"]
       interval: 10s
       timeout: 5s
       retries: 6

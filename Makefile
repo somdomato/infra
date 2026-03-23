@@ -7,7 +7,12 @@
 # O diretório de trabalho pode variar. Os repos são sempre referenciados
 # por caminhos relativos (../somdomato, ../stream, ../chat).
 
-MUSIC_PATH ?= /home/lucas/music/sdm
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+    MUSIC_PATH ?= /Users/lucas/music/sdm
+else
+    MUSIC_PATH ?= /home/lucas/music/sdm
+endif
 
 # ─────────────────────────────────────────────
 # Stacks completas (simulam as VPS)
