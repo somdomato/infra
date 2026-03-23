@@ -20,7 +20,6 @@
         <admin-password>hackmeagain</admin-password>
     </authentication>
 
-    <!-- localhost para dev Docker -->
     <hostname>localhost</hostname>
 
     <mount type="default">
@@ -29,13 +28,6 @@
 
     <listen-socket>
         <port>8000</port>
-        <mount-name>/radio.mp3</mount-name>
-        <charset>UTF-8</charset>
-        <stream-name>Radio Som do Mato</stream-name>
-        <stream-description>A mais sertaneja</stream-description>
-        <stream-url>https://somdomato.com</stream-url>
-        <genre>Sertanejo</genre>
-        <bitrate>128</bitrate>
     </listen-socket>
 
     <http-headers>
