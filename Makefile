@@ -58,7 +58,9 @@ down-vps2:  ## Para VPS2
 # ─────────────────────────────────────────────
 
 .PHONY: site
-site: certs  ## Standalone: site somdomato (Next.js + Nginx + Icecast somdomato)
+site:  ## Standalone: site somdomato (Next.js + Nginx + Icecast somdomato)
+	rm -rf docker/somdomato/certs/
+	bash docker/somdomato/generate-certs.sh
 	MUSIC_PATH=$(MUSIC_PATH) docker compose -f docker/somdomato/docker-compose.yml up -d --build
 	@echo "Site: https://localhost"
 

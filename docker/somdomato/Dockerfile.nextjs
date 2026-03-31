@@ -31,5 +31,5 @@ COPY . .
 
 EXPOSE 3000
 
-# Rodar em modo desenvolvimento
-CMD ["pnpm", "dev"]
+# Rodar em modo desenvolvimento (instala deps no volume, push cria as tabelas se não existirem)
+CMD ["sh", "-c", "pnpm install && pnpm run push && pnpm run seed && pnpm dev"]

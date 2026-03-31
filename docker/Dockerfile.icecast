@@ -1,0 +1,19 @@
+FROM debian:trixie-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    icecast2 \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+EXPOSE 8000
+
+CMD ["/bin/sh", "-c", "\
+    cp /etc/icecast2/icecast.xml /tmp/icecast.xml && \
+    if [ -n \"$ICECAST_SOURCE_PASSWORD\" ]; then sed -i \"s/<source-password>[^<]*<\\/source-password>/<source-password>$ICECAST_SOURCE_PASSWORD<\\/source-password>/g\" /tmp/icecast.xml; fi && \
+    if [ -n \"$ICECAST_RELAY_PASSWORD\" ];  then sed -i \"s/<relay-password>[^<]*<\\/relay-password>/<relay-password>$ICECAST_RELAY_PASSWORD<\\/relay-password>/g\"   /tmp/icecast.xml; fi && \
+    if [ -n \"$ICECAST_ADMIN_PASSWORD\" ];  then sed -i \"s/<admin-password>[^<]*<\\/admin-password>/<admin-password>$ICECAST_ADMIN_PASSWORD<\\/admin-password>/g\"   /tmp/icecast.xml; fi && \
+    if [ -n \"$ICECAST_PASSWORD\" ];        then sed -i \"s/<password>[^<]*<\\/password>/<password>$ICECAST_PASSWORD<\\/password>/g\"                                 /tmp/icecast.xml; fi && \
+    if [ -n \"$ICECAST_HOSTNAME\" ];        then sed -i \"s/<hostname>[^<]*<\\/hostname>/<hostname>$ICECAST_HOSTNAME<\\/hostname>/g\"                                 /tmp/icecast.xml; fi && \
+    exec sudo -Eu icecast2 icecast2 -n -c /tmp/icecast.xml"]

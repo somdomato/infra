@@ -18,13 +18,13 @@ services:
   nextjs:
     container_name: somdomato-nextjs
     build:
-      context: ../../somdomato
+      context: ../../../somdomato
       dockerfile: ../infra/docker/somdomato/Dockerfile.nextjs
     env_file:
       - ../../../somdomato/.env
     volumes:
       - type: bind
-        source: ../../somdomato
+        source: ../../../somdomato
         target: /app
       - somdomato-node-modules:/app/node_modules
       - somdomato-nextjs-cache:/app/.next
@@ -36,6 +36,7 @@ services:
       - HOSTNAME=0.0.0.0
       - MUSIC_PATH=/var/music/sdm
       - UPLOADS_DIR=/var/music/sdm/uploads
+      - CI=true
     ports:
       - "3000:3000"
     networks:
@@ -46,7 +47,7 @@ services:
       interval: 15s
       timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 120s
 
   nginx:
     container_name: somdomato-nginx
@@ -74,8 +75,10 @@ services:
 
   icecast:
     container_name: somdomato-icecast
-    image: moul/icecast
-    platform: linux/amd64
+    build:
+      context: ..
+      dockerfile: Dockerfile.icecast
+    image: sdm-icecast
     ports:
       - "8000:8000"
     environment:
@@ -86,7 +89,7 @@ services:
       - ICECAST_HOSTNAME=localhost
     volumes:
       - type: bind
-        source: ../../somdomato/ansible/etc/icecast/somdomato-docker.xml
+        source: ../../../somdomato/ansible/etc/icecast/somdomato-docker.xml
         target: /etc/icecast2/icecast.xml
         read_only: true
     networks:
@@ -96,13 +99,13 @@ services:
   liquidsoap:
     container_name: somdomato-liquidsoap
     build:
-      context: ../../somdomato
+      context: ../../../somdomato
       dockerfile: ../infra/docker/somdomato/Dockerfile.liquidsoap
     ports:
       - "8081:8081"
     volumes:
       - type: bind
-        source: ../../somdomato/ansible/etc/liquidsoap/somdomato-docker.liq
+        source: ../../../somdomato/ansible/etc/liquidsoap/somdomato-docker.liq
         target: /etc/liquidsoap/somdomato.liq
         read_only: true
       - type: bind

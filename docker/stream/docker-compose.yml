@@ -18,8 +18,10 @@
 services:
   icecast:
     container_name: stream-icecast
-    image: moul/icecast
-    platform: linux/amd64
+    build:
+      context: ..
+      dockerfile: Dockerfile.icecast
+    image: sdm-icecast
     ports:
       - "8000:8000"
     environment:
@@ -40,7 +42,7 @@ services:
   liquidsoap:
     container_name: stream-liquidsoap
     build:
-      context: ../../stream
+      context: ../../../stream
       dockerfile: ../infra/docker/stream/Dockerfile.liquidsoap
     ports:
       - "8010:8010"
