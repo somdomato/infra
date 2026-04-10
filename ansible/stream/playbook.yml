@@ -26,7 +26,7 @@
         dest: /etc/letsencrypt/renewal-hooks/deploy/icecast-certificates-somdomato
         owner: root
         group: root
-        mode: '0755'
+        mode: "0755"
 
     # Icecast
     - name: Alterar as configurações do Icecast
@@ -35,26 +35,16 @@
         dest: /etc/icecast2/somdomato.xml
         owner: icecast2
         group: icecast2
-        mode: '0644'
+        mode: "0644"
 
     # LiquidSoap
-    - name: Instalar os executaveis auxiliares do LiquidSoap
-      ansible.builtin.copy:
-        src: "usr/local/bin/{{ item }}"
-        dest: "/usr/local/bin/{{ item }}"
-        owner: root
-        group: root
-        mode: '0755'
-      with_items:
-        - "next-song"
-
     - name: Criar o diretorio de configuracoes do LiquidSoap
       ansible.builtin.file:
         path: /etc/liquidsoap/sdm
         state: directory
         owner: liquidsoap
         group: liquidsoap
-        mode: '0755'
+        mode: "0755"
 
     - name: Alterar as configurações do LiquidSoap
       ansible.builtin.copy:
@@ -62,7 +52,7 @@
         dest: "/etc/liquidsoap/sdm/{{ item }}"
         owner: liquidsoap
         group: liquidsoap
-        mode: '0644'
+        mode: "0644"
       with_items:
         - "somdomato.liq"
         - "settings.liq"
@@ -76,7 +66,7 @@
         dest: "/etc/nginx/sites.d/50-radio.somdomato.com.conf"
         owner: root
         group: root
-        mode: '0644'
+        mode: "0644"
 
     - name: Copiar os arquivos de configuração do Nginx
       ansible.builtin.copy:
@@ -84,7 +74,7 @@
         dest: "/etc/nginx/conf.d/{{ item }}"
         owner: root
         group: root
-        mode: '0644'
+        mode: "0644"
       with_items:
         - "no-cache.conf"
 
